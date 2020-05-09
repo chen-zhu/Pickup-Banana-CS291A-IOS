@@ -93,11 +93,62 @@ class GameViewController: UIViewController, ARSessionDelegate{
                     self.time = Date().timeIntervalSince1970
                     
                     self.performance_tuner = 1;
-                    print(self.cameraAnchor.children)
+                    //print(self.cameraAnchor.children)
                 }
             }
         }
+        
+        
+        self.planAnchor.actions.tapBanana.onAction = { entity in
+            if(self.performance_tuner <= 0){
+                if(self.cameraAnchor.children.isEmpty) {
+                    print("Tapped banana~")
+                    self.cameraAnchor.name = "cameraAnchor"
+                    arView.scene.addAnchor(self.cameraAnchor)
+                    entity?.setParent(self.cameraAnchor, preservingWorldTransform: true)
+                    //var cam_transform = cameraAnchor.transform
+                    //cam_transform.translation.z = -0.12
+                    //entity?.move(to: cam_transform, relativeTo: cameraAnchor, duration: 1)
+                    entity?.position = SIMD3(0, 0, -0.12)
+                    self.time = Date().timeIntervalSince1970
+                    
+                    self.performance_tuner = 1;
+                    //print(self.cameraAnchor.children)
+                }
+            }
+            
+        }
     }
+    
+    // MARK: - Tap Gesture
+    
+    @IBAction func tap(_ sender: UITapGestureRecognizer) {
+        if(self.cameraAnchor.children.isEmpty == false) {
+            print("I am tapping here~")
+            let tapLocation = sender.location(in: arView)
+            //print(tapLocation)
+            let hitTestResult = arView.hitTest(tapLocation, types: .featurePoint)
+            //print(hitTestResult)
+            
+            let rayResult = arView.raycast(from: tapLocation, allowing: .estimatedPlane, alignment: .horizontal)
+            //let rayResult = arView.scene.raycastQuery(from: tapLocation, allowing: .estimatedPlane, alignment: .any)
+            
+            print(rayResult)
+            let entity = self.cameraAnchor.children[0]
+            entity.setParent(self.planAnchor, preservingWorldTransform: true)
+            self.performance_tuner = 0
+            //var x = rayResult.direction.x
+            //var y = rayResult.direction.y
+            //var z = rayResult.direction.z
+            
+            
+            
+            
+        }
+    }
+    
+    
+    
     
     
 }
