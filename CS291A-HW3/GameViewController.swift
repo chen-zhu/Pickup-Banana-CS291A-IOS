@@ -23,7 +23,7 @@ class GameViewController: UIViewController, ARSessionDelegate{
     override func viewDidLoad() {
         super.viewDidLoad()
         arView.session.delegate = self
-        arView.debugOptions = [ARView.DebugOptions.showFeaturePoints, ARView.DebugOptions.showWorldOrigin]
+        arView.debugOptions = [ARView.DebugOptions.showFeaturePoints, ARView.DebugOptions.showWorldOrigin, ARView.DebugOptions.showAnchorOrigins]
         
         //let independent_anchor = AnchorEntity(plane: .horizontal)
         //arView.scene.addAnchor(independent_anchor)
@@ -53,7 +53,7 @@ class GameViewController: UIViewController, ARSessionDelegate{
                 let banana = self.cameraAnchor.children[0]
                 let banana_position = banana.position(relativeTo: self.planAnchor)
                 
-                if(banana_position.y <= 0.015){
+                if(banana_position.y <= 0.025){
                     print("touched the plan~")
                     banana.setParent(self.planAnchor, preservingWorldTransform: true)
                     var pos = banana.position
@@ -105,10 +105,10 @@ class GameViewController: UIViewController, ARSessionDelegate{
                     print("Tapped banana~")
                     self.cameraAnchor.name = "cameraAnchor"
                     arView.scene.addAnchor(self.cameraAnchor)
-                    entity?.setParent(self.cameraAnchor, preservingWorldTransform: true)
-                    //var cam_transform = cameraAnchor.transform
+                    //var cam_transform = self.cameraAnchor.transform
                     //cam_transform.translation.z = -0.12
-                    //entity?.move(to: cam_transform, relativeTo: cameraAnchor, duration: 1)
+                    //entity?.move(to: cam_transform, relativeTo: self.planAnchor)
+                    entity?.setParent(self.cameraAnchor, preservingWorldTransform: true)
                     entity?.position = SIMD3(0, 0, -0.12)
                     self.time = Date().timeIntervalSince1970
                     
@@ -121,30 +121,60 @@ class GameViewController: UIViewController, ARSessionDelegate{
     }
     
     // MARK: - Tap Gesture
-    
     @IBAction func tap(_ sender: UITapGestureRecognizer) {
-        if(self.cameraAnchor.children.isEmpty == false) {
-            print("I am tapping here~")
-            let tapLocation = sender.location(in: arView)
-            //print(tapLocation)
-            let hitTestResult = arView.hitTest(tapLocation, types: .featurePoint)
-            //print(hitTestResult)
-            
-            let rayResult = arView.raycast(from: tapLocation, allowing: .estimatedPlane, alignment: .horizontal)
-            //let rayResult = arView.scene.raycastQuery(from: tapLocation, allowing: .estimatedPlane, alignment: .any)
-            
-            print(rayResult)
-            let entity = self.cameraAnchor.children[0]
-            entity.setParent(self.planAnchor, preservingWorldTransform: true)
-            self.performance_tuner = 0
-            //var x = rayResult.direction.x
-            //var y = rayResult.direction.y
-            //var z = rayResult.direction.z
-            
-            
-            
-            
+        let t = self.time
+        //print("I am tapping", self.cameraAnchor.children.isEmpty, t, Date().timeIntervalSince1970)
+        if(t + 0.1 < Date().timeIntervalSince1970){
+            if(self.cameraAnchor.children.isEmpty == false) {
+                print("I am tapping here~")
+                let tapLocation = sender.location(in: arView)
+                //print(tapLocation)
+                let hitTestResult = arView.hitTest(tapLocation, types: .existingPlane)
+                //let hitTestResult = arView.raycast(from: tapLocation, allowing: .estimatedPlane, alignment: .any)
+                if(!hitTestResult.isEmpty){
+                    //print(hitTestResult)
+                    
+                    //let rayResult = arView.raycast(from: tapLocation, allowing: .estimatedPlane, alignment: .horizontal)
+                    
+                    //print(rayResult)
+                    let transform = hitTestResult[0].worldTransform
+                    
+                    //print(transform.columns)
+                    let entity = self.cameraAnchor.children[0]
+                    
+                    
+                    self.performance_tuner = 0
+                    let original_orientation = entity.orientation(relativeTo: nil)
+                    entity.move(to: transform, relativeTo: nil)
+                    entity.setParent(self.planAnchor, preservingWorldTransform: true)
+                    entity.position.y = 0.015
+                    entity.setOrientation(original_orientation, relativeTo: nil)
+                    entity.setScale(SIMD3(0.5, 0.5, 0.5), relativeTo: self.planAnchor.children[0])
+                    
+                    //if (entity.move(to: transform, relativeTo: nil, duration: 0.5).isComplete){
+                    //    entity.setParent(self.planAnchor, preservingWorldTransform: true)
+                    //    entity.position.y = 0.015
+                    //}
+                    //let x = transform.columns.3.x//rayResult!.direction.x
+                    //let y = transform.columns.3.y//rayResult!.direction.y
+                    //let z = transform.columns.3.z//rayResult!.direction.z
+                    
+                    
+                    
+                    //entity.position = SIMD3(Float(x), Float(y), Float(z))
+                    //print(SIMD3(Float(x), Float(y), Float(z)))
+                    
+                    
+                    //entity.position.y = 0.015
+                    //var x = rayResult.direction.x
+                    //var y = rayResult.direction.y
+                    //var z = rayResult.direction.z
+                }
+            }
         }
+        //else {
+        //    self.time = Date().timeIntervalSince1970
+        //}
     }
     
     
