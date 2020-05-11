@@ -15,6 +15,7 @@ class GameViewController: UIViewController, ARSessionDelegate{
     @IBOutlet var arView: ARView!
     
     var planAnchor = try! Experience.loadPlan()
+    var everythingAnchor = try! Experience.loadEverything()
     var cameraAnchor = AnchorEntity(.camera)
     var time = Date().timeIntervalSince1970
     
@@ -22,30 +23,37 @@ class GameViewController: UIViewController, ARSessionDelegate{
         
     override func viewDidLoad() {
         super.viewDidLoad()
+
         arView.session.delegate = self
         arView.debugOptions = [ARView.DebugOptions.showFeaturePoints, ARView.DebugOptions.showWorldOrigin, ARView.DebugOptions.showAnchorOrigins]
         
-        //let independent_anchor = AnchorEntity(plane: .horizontal)
-        //arView.scene.addAnchor(independent_anchor)
+        //planAnchor = try! Experience.loadPlan()
+        //arView.scene.anchors.append(planAnchor)
         
-        // Load the "Box" scene from the "Experience" Reality File
-        planAnchor = try! Experience.loadPlan()
-        //independent_anchor.addChild(planAnchor)
+        everythingAnchor = try! Experience.loadEverything()
+        arView.scene.anchors.append(everythingAnchor)
         
-        arView.scene.anchors.append(planAnchor)
-        
-        //print(planAnchor.children[0].children[1].position)
-        //print(planAnchor.banana?.position)
-        //print(planAnchor.sign?.position)
-        //arView.physicsOrigin = planAnchor.sign
-        
-        self.setupObjNotifyActions(arView: arView)
-        
+        self.initObjNotifyActions(arView: arView)
     }
     
     
     // MARK: - ARSessionDelegate
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        self.setupObjNotifyActions(arView: arView)
+        //let myAnchor = AnchorEntity(.image(group: "photo", name: "marker"))
+        //arView.scene.anchors.append(myAnchor)
+        //print("image position" , myAnchor.position(relativeTo: self.planAnchor), self.planAnchor.position(relativeTo: self.planAnchor))
+        //if(myAnchor.isActive){
+        //    self.planAnchor.banana1!.setPosition(myAnchor.position(relativeTo: self.planAnchor), relativeTo: self.planAnchor.banana1)
+        //    self.planAnchor.banana2!.setPosition(myAnchor.position(relativeTo: self.planAnchor), relativeTo: self.planAnchor.banana2)
+        //    self.planAnchor.banana3!.setPosition(myAnchor.position(relativeTo: self.planAnchor), relativeTo: self.planAnchor.banana3)
+        //    self.planAnchor.banana4!.setPosition(myAnchor.position(relativeTo: self.planAnchor), relativeTo: self.planAnchor.banana4)
+        //    self.planAnchor.sign!.setPosition(myAnchor.position(relativeTo: self.planAnchor), relativeTo: self.planAnchor.sign)
+        //    self.planAnchor.setPosition(myAnchor.position(relativeTo: self.planAnchor), relativeTo: self.planAnchor)
+            //self.planAnchor.reanchor(myAnchor.components, preservingWorldTransform: <#T##Bool#>)
+        //    self.planAnchor.sign?.move(to: myAnchor.transformMatrix(relativeTo: nil), relativeTo: nil)
+        //}
+        
         //if(self.performance_tuner > 0){
             if(self.time + 2 > Date().timeIntervalSince1970){
                 //print("Putting down: Time Buffer detected")
@@ -74,6 +82,17 @@ class GameViewController: UIViewController, ARSessionDelegate{
     
     
     // MARK: - Object Notification Action
+    
+    func initObjNotifyActions(arView: ARView){
+        self.everythingAnchor.actions.start.onAction = { entity in
+            arView.scene.anchors.remove(at: 0)
+            self.planAnchor = try! Experience.loadPlan()
+            arView.scene.anchors.append(self.planAnchor)
+            
+            self.setupObjNotifyActions(arView: arView)
+        }
+    }
+    
     func setupObjNotifyActions(arView: ARView){
         self.planAnchor.actions.pickupBanana.onAction = { entity in
             //Only pick up banana if the current camera anchor has nothing
